@@ -1,12 +1,16 @@
 {
-    "name": "rss-publish-to-dropbox",
-    "version": "0.0.1",
-    "description": "",
-    "main": "index.js",
-    "author": "Daniel Ilkovich",
-    "license": "ISC",
-    "private": true,
-    "dependencies": {
-        "lodash": "^3.9.3"
-    }
+  "name": "rss-publish-to-dropbox",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "author": "Daniel Ilkovich",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "dropbox": "^0.10.3",
+    "feedparser": "^1.1.4",
+    "lodash": "^3.9.3",
+    "q": "^1.4.1",
+    "rss": "^1.2.1"
+  }
 }

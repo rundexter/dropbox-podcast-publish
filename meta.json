@@ -1,26 +1,38 @@
-/*
- * Metadata describing the module operation
- */
 {
-    //Required. Inputs the module expects.
-    "inputs": [
-        //e.g.
-        /*
-        {
-            "id": "from",
-            "title":"From"
-        }
-        */
-    ],
-    //Required. Outputs the module emits.
-    "outputs": [
-      //e.g.
-      /*
-        {
-            "id": "from",
-            "title":"From"
-        }
-      */
-    ],
+    "inputs": [{
+        "id"          : "file",
+        "title"       : "File",
+        "description" : "Full path (including filename) to where your RSS XML is stored."
+    }, {
+        "id"    : "feed_title",
+        "title" : "Feed Title"
+    }, {
+        "id"    : "feed_description",
+        "title" : "Feed Description"
+    }, {
+        "id"    : "feed_url",
+        "title" : "Feed URL"
+    }, {
+        "id"    : "site_url",
+        "title" : "Site URL"
+    }, {
+        "id"    : "image_url",
+        "title" : "Image URL"
+    }, {
+        "id"    : "item_title",
+        "title" : "Item Title"
+    }, {
+        "id"    : "item_link",
+        "title" : "Item Link"
+    }, {
+        "id"    : "item_content",
+        "title" : "Item Content"
+    }],
+    "outputs": [{
+        "id"    : "url",
+        "title" : "URL",
+        "description" : "The URL to the feed containing the entries"
+    }],
+    "providers": ["dropbox"],
     "title": "RSS Publish To Dropbox" /* Required.A display name for the module */
 }
