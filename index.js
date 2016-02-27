@@ -82,12 +82,8 @@ module.exports = {
                 next();
             } else {
                 self.upload()
-                  .then(function() {
-                      next();
-                  })
-                  .catch(function(err) {
-                      self.fail(err);
-                  });
+                  .then(next)
+                  .catch(self.fail.bind(self));
             }
         };
 
@@ -109,23 +105,25 @@ module.exports = {
                         : self.complete(stat);
                   });
               })
-              .catch(function(err) {
-                  self.fail(err);
-              });
+              .catch(self.fail.bind(self));
         });
 
         /**
          *  The chain of commands to read/create the stream, add to it and then send it back
          */
-        q.nfcall(client.readFile.bind(client), file)
+        q.all([
+                q.nfcall(client.readFile.bind(client), file),
+                q.nfcall(client.makeUrl.bind(client), file, { downloadHack: true })
+            ])
            .then(this.read.bind(this, step, dexter))
            .then(this.addAndSave.bind(this, step, dexter))
-           .then(function(res) {
-                client.makeUrl(self.file, { downloadHack: true }, function(err, info) {
-                    self.complete(info);
-                });
+           .then(function() {
+              self.complete({
+                  url: self.url
+              });
            })
            .catch(function(err) {
+               console.log('catch');
                if(!self.isRead) {
                    self
                      .create(step, dexter)
@@ -147,6 +145,8 @@ module.exports = {
      *                  { rss: <rss>, additionalItems: [ { title: 'title', description: 'description' }, ...]
      */
     , addAndSave: function(step, dexter, state) {
+        console.log('addAndSave');
+
         return this.add.call(this, step, dexter, state)
           .then(this.write.bind(this))
           .catch(this.fail.bind(this));
@@ -162,12 +162,10 @@ module.exports = {
 
         var title = step.input('feed_title').first()
           , desc  = step.input('feed_description').first()
-          , feed  = step.input('feed_url').first()
           , site  = step.input('site_url').first()
           , rss   = new RSS({
                         title       : title,
                         description : desc,
-                        feed_url    : feed,
                         site_url    : site
                     })
         ;
@@ -184,11 +182,16 @@ module.exports = {
      *  @param {Dexter} dexter
      *  @param {String} data - the contents of the feed xml
      */
-    , read: function(step, dexter, data) {
+    , read: function(step, dexter, results) {
+        console.log('read');
 
         //set a flag indicating data was read
         this.isRead = true;
-        data = data[0];
+        var data = results[0][0]
+          , url  = results[1].url
+        ;
+
+        this.url = url;
 
         var s          = new stream.Readable()
           , feedparser = new FeedParser()
@@ -218,7 +221,7 @@ module.exports = {
             var rss = new RSS({
                 title       : meta.title,
                 description : meta.description,
-                feed_url    : meta.xmlurl,
+                feed_url    : url,
                 site_url    : meta.link
               })
             ;
@@ -244,6 +247,8 @@ module.exports = {
      *                  { rss: <rss>, additionalItems: [ { title: 'title', description: 'description' }, ...]
      */
     , add: function(step, dexter, state) {
+        console.log('add');
+
         var title   = step.input('item_title').first()
           , content = step.input('item_content').first()
           , link    = step.input('item_link').first()
@@ -265,6 +270,7 @@ module.exports = {
                 title: title
                 , description: content
                 , url: link
+                , date: (new Date()).toUTCString()
             });
         }
 
@@ -278,6 +284,8 @@ module.exports = {
      *                  ```
      */
     , write: function(state) {
+        console.log('write');
+
         return q.nfcall(this.client.writeFile.bind(this.client), this.file, state.rss.xml({indent:true}));
     }
 };

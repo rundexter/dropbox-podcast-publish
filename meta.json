@@ -10,9 +10,6 @@
         "id"    : "feed_description",
         "title" : "Feed Description"
     }, {
-        "id"    : "feed_url",
-        "title" : "Feed URL"
-    }, {
         "id"    : "site_url",
         "title" : "Site URL"
     }, {
