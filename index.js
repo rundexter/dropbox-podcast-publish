@@ -5,7 +5,7 @@ var dropbox    = require('dropbox')
   , RSS        = require('podcast')
   , FeedParser = require('feedparser')
   , _          = require('lodash')
-  , debug      = true
+  , debug
 ;
 
 function log() {
@@ -43,12 +43,12 @@ module.exports = {
 
         if(!this.receivedBuffersLength) return deferred.resolve();
 
-        self.log('uploading chunk', this.receivedBuffersLength);
+        log('uploading chunk', this.receivedBuffersLength);
         this.client.resumableUploadStep(
             Buffer.concat(this.receivedBuffers, this.receivedBuffersLength)
             , this.cursor
             , function(err, _cursor) {
-                self.log('uploaded chunk', self.file);
+                log('uploaded chunk', self.file);
                 self.cursor = _cursor;
                 return err
                    ? deferred.reject(err)
@@ -333,6 +333,21 @@ module.exports = {
     }
     , done: function() {
        log('done', _.keys(this.state));
-       this.complete({ url: _.get(this, 'state.feed_url')});
+       var url = _.get(this, 'state.feed_url')
+         , self = this
+         , client = self.client
+       ;
+
+       if(!url) {
+           q.nfcall(client.makeUrl.bind(client), self.file, { downloadHack: true })
+                .then(function(result) {
+                    self.complete({ url: result.url});
+                })
+                .catch(this.fail.bind(this))
+                .done()
+           ;
+       } else {
+           this.complete({ url: url});
+       }
     }
 };
