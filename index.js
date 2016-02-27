@@ -118,12 +118,13 @@ module.exports = {
            .then(this.read.bind(this, step, dexter))
            .then(this.addAndSave.bind(this, step, dexter))
            .then(function() {
+              //console.log('complete');
               self.complete({
                   url: self.url
               });
            })
            .catch(function(err) {
-               console.log('catch');
+               //console.log('catch');
                if(!self.isRead) {
                    self
                      .create(step, dexter)
@@ -145,7 +146,7 @@ module.exports = {
      *                  { rss: <rss>, additionalItems: [ { title: 'title', description: 'description' }, ...]
      */
     , addAndSave: function(step, dexter, state) {
-        console.log('addAndSave');
+        //console.log('addAndSave');
 
         return this.add.call(this, step, dexter, state)
           .then(this.write.bind(this))
@@ -158,7 +159,7 @@ module.exports = {
      *  @param {Dexter} dexter
      */
     , create: function(step, dexter) {
-        console.log('create');
+        //console.log('create');
 
         var title = step.input('feed_title').first()
           , desc  = step.input('feed_description').first()
@@ -183,22 +184,18 @@ module.exports = {
      *  @param {String} data - the contents of the feed xml
      */
     , read: function(step, dexter, results) {
-        console.log('read');
+        //console.log('read');
 
         //set a flag indicating data was read
         this.isRead = true;
-        var data = results[0][0]
-          , url  = results[1].url
-        ;
-
-        this.url = url;
-
-        var s          = new stream.Readable()
+        var data       = results[0][0]
+          , url        = results[1].url
+          , s          = new stream.Readable()
           , feedparser = new FeedParser()
           , deferred   = q.defer()
           , items      = []
+          , rss
         ;
-
 
         // Create a readable stream out of the string
         s._read = function noop() {};
@@ -208,28 +205,38 @@ module.exports = {
         // Pipe it to thefeedparser
         s.pipe(feedparser);
 
-        //grab all the items
-        feedparser.on('readable', function() {
-            var stream = this
-              , meta = this.meta
-              , item;
+        feedparser.on('meta', function(meta) {
+            //console.log('meta');
 
-            while( (item = stream.read() ) ) {
-               items.push(item);
-            }
-
-            var rss = new RSS({
+            rss = new RSS({
                 title       : meta.title,
                 description : meta.description,
                 feed_url    : url,
                 site_url    : meta.link
-              })
-            ;
+            });
+        });
+
+        feedparser.on('end', function() {
+            console.log('end');
 
             deferred.resolve({
                 rss               : rss
                 , additionalItems : items
             });
+        });
+
+        //grab all the items
+        feedparser.on('readable', function() {
+            console.log('readable');
+
+            var stream = this
+              , meta = this.meta
+              , item;
+
+            while( (item = stream.read() ) ) {
+               console.log('item');
+               items.push(item);
+            }
         });
 
         //handle errors

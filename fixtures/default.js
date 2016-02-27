@@ -74,7 +74,7 @@ module.exports = _.merge({
             input: {
                 //Replace VAR1 with the name of an expected input, and add more inputs as needed.
                 //
-                file             : '/Public/mp3s/feed.xml',
+                file             : '/mp3s/feed.xml',
                 feed_title       : 'Test',
                 feed_description : 'Feed Description',
                 feed_url         : 'https://dropbox.com/ilkovich/mp3s/feed.xml',
