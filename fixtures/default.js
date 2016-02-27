@@ -74,14 +74,7 @@ module.exports = _.merge({
             input: {
                 //Replace VAR1 with the name of an expected input, and add more inputs as needed.
                 //
-                file             : '/mp3s/feed.xml',
-                feed_title       : 'Test',
-                feed_description : 'Feed Description',
-                feed_url         : 'https://dropbox.com/ilkovich/mp3s/feed.xml',
-                site_url         : 'https://rundexter.com',
-                item_title       : 'TitleB',
-                item_link        : 'http://rundexter.com/b',
-                item_content     : 'ContentB'
+                file             : '/mp3s/feed3.xml',
             }
         }
     }

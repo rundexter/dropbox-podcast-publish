@@ -19,8 +19,14 @@
         "id"    : "item_title",
         "title" : "Item Title"
     }, {
+        "id"    : "item_type",
+        "title" : "Item Type"
+    }, {
         "id"    : "item_link",
         "title" : "Item Link"
+    }, {
+        "id"    : "item_length",
+        "title" : "Item Length"
     }, {
         "id"    : "item_content",
         "title" : "Item Content"
