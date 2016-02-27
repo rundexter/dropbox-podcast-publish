@@ -2,10 +2,16 @@
 var dropbox    = require('dropbox')
   , stream     = require('stream')
   , q          = require('q')
-  , RSS        = require('rss')
+  , RSS        = require('podcast')
   , FeedParser = require('feedparser')
   , _          = require('lodash')
+  , debug      = true
 ;
+
+function log() {
+    if(debug)
+        console.log.apply(console, arguments);
+}
 
 module.exports = {
     /**
@@ -71,6 +77,9 @@ module.exports = {
           , cursor   = null
         ;
 
+        //allow debugging the module
+        debug = !!dexter.environment('debug');
+
         this.client   = client;
         this.file     = file;
         this.writable = writable;
@@ -98,13 +107,7 @@ module.exports = {
         writable.on('finish', function (details) {
             self
               .upload()
-              .then(function() {
-                  client.resumableUploadFinish(self.file, self.cursor, function(err, stat) {
-                      return err
-                        ? self.fail(err)
-                        : self.complete(stat);
-                  });
-              })
+              .then(q.nbind(client.resumableUploadStep, client, self.file, self.cursor))
               .catch(self.fail.bind(self));
         });
 
@@ -117,14 +120,8 @@ module.exports = {
             ])
            .then(this.read.bind(this, step, dexter))
            .then(this.addAndSave.bind(this, step, dexter))
-           .then(function() {
-              //console.log('complete');
-              self.complete({
-                  url: self.url
-              });
-           })
            .catch(function(err) {
-               //console.log('catch');
+               log('catch');
                if(!self.isRead) {
                    self
                      .create(step, dexter)
@@ -146,10 +143,11 @@ module.exports = {
      *                  { rss: <rss>, additionalItems: [ { title: 'title', description: 'description' }, ...]
      */
     , addAndSave: function(step, dexter, state) {
-        //console.log('addAndSave');
+        log('addAndSave');
 
         return this.add.call(this, step, dexter, state)
           .then(this.write.bind(this))
+          .then(this.done.bind(this))
           .catch(this.fail.bind(this));
     }
     /**
@@ -159,7 +157,7 @@ module.exports = {
      *  @param {Dexter} dexter
      */
     , create: function(step, dexter) {
-        //console.log('create');
+        log('create');
 
         var title = step.input('feed_title').first()
           , desc  = step.input('feed_description').first()
@@ -172,8 +170,8 @@ module.exports = {
         ;
 
         return q({
-            rss: rss
-            , additionalItems: []
+            rss               : rss
+            , additionalItems : []
         });
     }
     /**
@@ -184,7 +182,7 @@ module.exports = {
      *  @param {String} data - the contents of the feed xml
      */
     , read: function(step, dexter, results) {
-        //console.log('read');
+        log('read');
 
         //set a flag indicating data was read
         this.isRead = true;
@@ -194,6 +192,7 @@ module.exports = {
           , feedparser = new FeedParser()
           , deferred   = q.defer()
           , items      = []
+          , self       = this
           , rss
         ;
 
@@ -206,7 +205,7 @@ module.exports = {
         s.pipe(feedparser);
 
         feedparser.on('meta', function(meta) {
-            //console.log('meta');
+            log('meta');
 
             rss = new RSS({
                 title       : meta.title,
@@ -217,24 +216,27 @@ module.exports = {
         });
 
         feedparser.on('end', function() {
-            console.log('end');
+            log('end');
 
-            deferred.resolve({
+            self.state = {
                 rss               : rss
                 , additionalItems : items
-            });
+                , feed_url        : url
+            };
+
+            deferred.resolve(self.state);
         });
 
         //grab all the items
         feedparser.on('readable', function() {
-            console.log('readable');
+            log('readable');
 
             var stream = this
               , meta = this.meta
               , item;
 
             while( (item = stream.read() ) ) {
-               console.log('item');
+               log('item');
                items.push(item);
             }
         });
@@ -254,7 +256,7 @@ module.exports = {
      *                  { rss: <rss>, additionalItems: [ { title: 'title', description: 'description' }, ...]
      */
     , add: function(step, dexter, state) {
-        console.log('add');
+        log('add');
 
         var title   = step.input('item_title').first()
           , content = step.input('item_content').first()
@@ -274,10 +276,10 @@ module.exports = {
         //only add the item if we have a link
         if(link) {
             rss.item({
-                title: title
-                , description: content
-                , url: link
-                , date: (new Date()).toUTCString()
+                title         : title
+                , description : content
+                , url         : link
+                , date        : (new Date()).toUTCString()
             });
         }
 
@@ -291,8 +293,12 @@ module.exports = {
      *                  ```
      */
     , write: function(state) {
-        console.log('write');
+        log('write');
 
         return q.nfcall(this.client.writeFile.bind(this.client), this.file, state.rss.xml({indent:true}));
+    }
+    , done: function() {
+       log('done', _.keys(this.state));
+       this.complete({ url: _.get(this, 'state.feed_url')});
     }
 };
