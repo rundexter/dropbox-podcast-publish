@@ -312,8 +312,13 @@ module.exports = {
             var title   = step.input('item_title')[idx]
               , content = step.input('item_content')[idx]
               , length  = step.input('item_length')[idx]
-              , type    = step.input('item_type')[idx]
+              , type    = step.input('item_type')
               , newItem
+            ;
+
+            type = type.length > 1 
+              ? type[idx]
+              : type[0]
             ;
 
             newItem = {
