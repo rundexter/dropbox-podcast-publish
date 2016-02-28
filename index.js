@@ -279,14 +279,9 @@ module.exports = {
     , add: function(step, dexter, state) {
         log('add');
 
-        var title   = step.input('item_title').first()
-          , content = step.input('item_content').first()
-          , link    = step.input('item_link').first()
-          , length  = step.input('item_length').first()
-          , type    = step.input('item_type').first()
+        var links    = step.input('item_link')
           , rss     = state.rss
           , items   = state.additionalItems
-          , newItem
         ;
 
         //make sure the feed has a link back
@@ -313,8 +308,14 @@ module.exports = {
             });
         });
 
-        //only add the item if we have a link
-        if(link) {
+        _.each(links, function(link, idx) {
+            var title   = step.input('item_title')[idx]
+              , content = step.input('item_content')[idx]
+              , length  = step.input('item_length')[idx]
+              , type    = step.input('item_type')[idx]
+              , newItem
+            ;
+
             newItem = {
                 title         : title
                 , description : content
@@ -330,7 +331,7 @@ module.exports = {
             log('newItem', newItem);
 
             rss.item(newItem);
-        }
+        });
 
         return q(state);
     }
