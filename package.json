@@ -1,9 +1,9 @@
 {
-  "name": "rss-publish-to-dropbox",
+  "name": "dropbox-podcast-publish",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
-  "author": "Daniel Ilkovich",
+  "author": "Run Dexter, Inc",
   "license": "ISC",
   "private": true,
   "dependencies": {
@@ -12,5 +12,9 @@
     "lodash": "^3.9.3",
     "podcast": "git+https://github.com/ilkovich/node-podcast.git#bumpRss",
     "q": "^1.4.1"
+  },
+  "repository" : {
+    "type": "git",
+    "url" : "https://github.com/rundexter/dropbox-podcast-publish"
   }
 }

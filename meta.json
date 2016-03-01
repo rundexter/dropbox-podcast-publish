@@ -36,6 +36,7 @@
         "title" : "URL",
         "description" : "The URL to the feed containing the entries"
     }],
+    "icon":"dropbox",
     "providers": ["dropbox"],
-    "title": "RSS Publish To Dropbox" /* Required.A display name for the module */
+    "title": "Podcast Publish To Dropbox" 
 }
